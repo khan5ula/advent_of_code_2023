@@ -99,7 +99,7 @@ int main(void) {
 
 /**
  * Checks whether the received character is a symbol
- * other than '-'. Returns 0 if is, returns 1 if not.
+ * other than '.'. Returns 0 if is, returns 1 if not.
  */
 int isSymbol(char character) {
   int result = 1;
