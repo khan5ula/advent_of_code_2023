@@ -73,7 +73,6 @@ int collect(const char* card,
     } else {
       if (consecutiveD == 1) {
         collection[numbersFound++] = digits[0];
-
       } else if (consecutiveD == 2) {
         collection[numbersFound++] = 10 * digits[0] + digits[1];
       }
