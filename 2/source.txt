@@ -9,12 +9,12 @@ Game 8: 7 blue, 14 green, 5 red; 1 green, 7 blue, 11 red; 6 blue, 16 red, 4 gree
 Game 9: 3 blue, 1 green, 6 red; 1 red, 1 blue, 1 green; 6 red, 2 blue, 1 green
 Game 10: 6 red, 11 blue, 12 green; 1 blue, 2 red, 3 green; 14 green, 6 red, 7 blue; 6 red, 10 blue, 9 green; 6 blue, 2 red
 Game 11: 5 blue, 2 red, 18 green; 2 blue, 13 green; 8 blue, 15 green, 2 red
-Game 12: 5 red, 4 blue; 1 blue, 8 green, 8 red; 15 gree
+Game 12: 5 red, 4 blue; 1 blue, 8 green, 8 red; 15 green, 5 red, 4 blue
 Game 13: 12 blue, 1 red, 6 green; 9 red, 6 blue, 12 green; 3 red, 11 green, 6 blue; 8 red, 4 green, 10 blue; 3 green, 7 blue
-Game 14: 9 red, 5 green, 1 blue; 1 red, 3 blue; 10 green, 5 red, 4 bluen, 7 red; 5 blue, 8 gred, 5 blue
+Game 14: 9 red, 5 green, 1 blue; 1 red, 3 blue; 10 green, 7 red; 5 blue, 8 green, 10 red
+Game 15: 3 blue, 9 red, 14 green; 15 green, 2 blue, 6 red; 7 green, 1 red, 5 blue
 Game 16: 7 green, 4 blue, 6 red; 6 green, 4 blue, 8 red; 5 red, 2 blue, 10 green; 4 blue, 4 red, 15 green; 9 red, 15 green, 6 blue; 7 green, 5 blue, 2 red
-Game 17: 8 red, 6 green, 2 blue; 4 green, 1 blue, 17 red; 1 greenreen, 10 red
-Game 15: 3 blue, 9 red, 14 green; 15 green, 2 blue, 6 red; 7 green, 1 , 11 red, 1 blue
+Game 17: 8 red, 6 green, 2 blue; 4 green, 1 blue, 17 red; 1 green, 11 red, 1 blue
 Game 18: 13 blue, 1 green, 3 red; 2 red, 2 green; 11 red, 1 green, 7 blue; 2 green, 7 blue, 2 red
 Game 19: 2 green, 13 red, 2 blue; 1 green, 6 blue, 4 red; 1 green, 2 blue, 15 red
 Game 20: 10 red, 11 blue, 8 green; 6 red, 13 blue, 2 green; 6 blue, 8 green, 3 red; 10 red, 2 blue, 8 green; 2 red, 3 blue, 7 green; 3 red
