@@ -13,7 +13,7 @@ int main(void) {
   FILE* file;
   char card[1024] = {'\0'};
   int scratchcards_total = 0;
-  int noOfLines = 0;
+  int no_of_lines = 0;
   int card_no = 0;
 
   if ((file = fopen("source.txt", "r")) == NULL) {
@@ -22,11 +22,11 @@ int main(void) {
   }
 
   while (fgets(card, 1024, file) != NULL)
-    noOfLines++;
+    no_of_lines++;
 
   rewind(file);
 
-  int* copies = calloc((noOfLines + 1), sizeof(int));
+  int* copies = calloc((no_of_lines + 1), sizeof(int));
 
   /**
    * DISCLAIMER:
@@ -60,7 +60,7 @@ int main(void) {
       copies[index] += multiplier;
   }
 
-  for (int index = 1; index <= noOfLines; index++)
+  for (int index = 1; index <= no_of_lines; index++)
     scratchcards_total += copies[index];
 
   printf("Scratchcards total: %d\n", scratchcards_total);
