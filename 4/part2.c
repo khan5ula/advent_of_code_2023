@@ -12,37 +12,60 @@ int collect(const char* card,
 int main(void) {
   FILE* file;
   char card[1024] = {'\0'};
-  int sum = 0;
+  int scratchcards_total = 0;
+  int noOfLines = 0;
+  int card_no = 0;
 
   if ((file = fopen("source.txt", "r")) == NULL) {
     perror("couldn't open the file");
     return 1;
   }
 
-  while (fgets(card, 1024, file) != NULL || !feof(file)) {
+  while (fgets(card, 1024, file) != NULL)
+    noOfLines++;
+
+  rewind(file);
+
+  int* copies = calloc((noOfLines + 1), sizeof(int));
+
+  /**
+   * DISCLAIMER:
+   * The indexing on copies & card_no begins from 1,
+   * meaning the array index of 0 is not used.
+   */
+
+  while (fgets(card, 1024, file) != NULL) {
+    copies[++card_no]++;
+
     int winning_numbers[100] = {0};
     int playing_numbers[100] = {0};
+
     int winning_no_count = 0;
     int playing_no_count = 0;
-    int matches = 0;
+    int cards_to_copy = 0;
 
-    // collect winning numbers
+    int multiplier = copies[card_no];
+
     winning_no_count = collect(card, winning_numbers, 100, ':', '|');
-
-    // collect playing numbers
     playing_no_count = collect(card, playing_numbers, 100, '|', '\0');
 
     for (int pi = 0; pi < playing_no_count; pi++) {
       for (int wi = 0; wi < winning_no_count; wi++) {
         if (playing_numbers[pi] == winning_numbers[wi])
-          matches = (matches == 0) ? 1 : matches * 2;
+          cards_to_copy++;
       }
     }
 
-    sum += matches;
+    for (int index = card_no + 1; index <= card_no + cards_to_copy; index++)
+      copies[index] += multiplier;
   }
 
-  printf("The total sum is: %d\n", sum);
+  for (int index = 1; index <= noOfLines; index++)
+    scratchcards_total += copies[index];
+
+  printf("Scratchcards total: %d\n", scratchcards_total);
+
+  free(copies);
   fclose(file);
 
   return 0;
