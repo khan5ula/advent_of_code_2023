@@ -10,20 +10,16 @@ int main(void) {
   FILE* file;
   char line[1024] = {0};
   int sum = 0;
-  int lineno = 0;  // debug
 
   if ((file = fopen("source.txt", "r")) == NULL) {
     perror("Couldn't open the file");
     return 1;
   }
 
-  while (fgets(line, 1024, file) != NULL || !feof(file)) {
-    printf("line: %d\n", ++lineno);
+  while (fgets(line, 1024, file) != NULL || !feof(file))
     sum += get_sum_from_string(line);
-  }
 
   fclose(file);
-
   printf("Sum: %d\n", sum);
 
   return 0;
@@ -38,23 +34,17 @@ int get_sum_from_string(char* string) {
   while (index < strlen(string)) {
     if (isdigit(string[index])) {
       digits[found++] = string[index++] - '0';
-      printf("found digit: %d\n", string[index - 1] - '0');
     } else {
       int stringAsNum = find_digit_from_text(string, &index);
-      if (stringAsNum > -1) {
+      if (stringAsNum > -1)
         digits[found++] = stringAsNum;
-        printf("found digit as text: %d\n", stringAsNum);
-      }
     }
   }
 
   if (found > 1) {
-    printf("adding %d and %d to the result\n", 10 * digits[0],
-           digits[found - 1]);
     result += 10 * digits[0];
     result += digits[found - 1];
   } else if (found == 1) {
-    printf("adding %d and %d to the result\n", 10 * digits[0], digits[0]);
     result += 10 * digits[0];
     result += digits[0];
   }
@@ -73,10 +63,9 @@ int find_digit_from_text(const char* string, int* sourceIndex) {
       substring[subIndex] = '\0';
       num = compare_substring(substring);
       if (num > -1) {
-        if (*sourceIndex > 0) {
-          // The ending char may be shared with next alpha form digit
+        // The ending char may be shared with next digit in alpha form
+        if (*sourceIndex > 0)
           (*sourceIndex)--;
-        }
         break;
       }
     } else {
