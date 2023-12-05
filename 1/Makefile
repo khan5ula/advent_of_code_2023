@@ -2,8 +2,8 @@
 
 CC = gcc
 CFLAGS = -Wall
-SRC = main.c
-TARGET = main
+SRC = second.c
+TARGET = second
 
 $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) $(SRC) -o $(TARGET)
