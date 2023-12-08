@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INITIAL_SIZE 10
+#define INITIAL_SIZE 20
 
 targets_t init_targets() {
   targets_t targets = {
@@ -30,7 +30,7 @@ targets_t init_targets() {
 void collect_seeds(seeds_t* seeds, FILE* file, char* line_of_text) {
   char* ch;
   if ((ch = strstr(line_of_text, "seeds:")))
-    seeds->no_of_refs = seed_refs(&seeds->list, seeds->no_of_refs, ch);
+    seeds->count = seed_refs(&seeds->list, seeds->count, ch);
 }
 
 int seed_refs(unsigned long** seeds, int no_of_seed_refs, char* ch) {
@@ -82,7 +82,7 @@ void collect_targets(targets_t* targets, FILE* file, char* line_of_text) {
         &targets->location, targets->no_of_location, line_of_text, file);
 }
 
-int collect_target(unsigned long** collection,
+int collect_target(unsigned long** targets,
                    const int org_number,
                    char* line_of_text,
                    FILE* file) {
@@ -95,9 +95,9 @@ int collect_target(unsigned long** collection,
       while (ch) {
         if (isdigit(ch[0]) || isdigit(ch[1])) {
           if (count % INITIAL_SIZE == 0)
-            *collection = realloc(
-                *collection, (count + INITIAL_SIZE) * sizeof(unsigned long));
-          (*collection)[count++] = atol(ch);
+            *targets = realloc(*targets,
+                               (count + INITIAL_SIZE) * sizeof(unsigned long));
+          (*targets)[count++] = atol(ch);
         }
         ch = strtok(NULL, " ");
       }
@@ -135,9 +135,9 @@ unsigned long inverse_go_through(const unsigned long digit,
   unsigned long result = digit;
 
   for (int index = 0; index < count; index += 3) {
-    const unsigned long dest = collection[index];
-    const unsigned long src = collection[index + 1];
-    const unsigned long range = collection[index + 2];
+    const long dest = collection[index];
+    const long src = collection[index + 1];
+    const long range = collection[index + 2];
 
     if (result >= dest && result <= dest + range) {
       result =
@@ -152,7 +152,7 @@ unsigned long inverse_go_through(const unsigned long digit,
 unsigned long go_through_from_seeds(seeds_t* seeds, targets_t targets) {
   long lowest = -1;
 
-  for (int sei = 0; sei < seeds->no_of_refs / 2; sei += 2) {
+  for (int sei = 0; sei < seeds->count / 2; sei += 2) {
     for (unsigned long true_seed_no = seeds->list[sei];
          true_seed_no < (seeds->list[sei] + seeds->list[sei + 1]);
          true_seed_no++) {
@@ -178,7 +178,7 @@ unsigned long go_through_from_seeds(seeds_t* seeds, targets_t targets) {
 unsigned long find_max_value(seeds_t seeds) {
   unsigned long max = 0;
 
-  for (int index = 0; index < seeds.no_of_refs; index += 2) {
+  for (int index = 0; index < seeds.count; index += 2) {
     if (seeds.list[index] + seeds.list[index + 1] > max)
       max = seeds.list[index] + seeds.list[index + 1];
   }
@@ -190,7 +190,7 @@ unsigned long go_through_from_location(seeds_t* seeds, targets_t targets) {
   long match = -1;
   unsigned long max_value = find_max_value(*seeds);
 
-  for (int digit = 0; digit < max_value && match < 0; digit++) {
+  for (int digit = 0; digit <= max_value && match < 0; digit++) {
     unsigned long result = digit;
 
     result =
@@ -205,38 +205,18 @@ unsigned long go_through_from_location(seeds_t* seeds, targets_t targets) {
                                 targets.no_of_fertilizers);
     result = inverse_go_through(result, targets.soils, targets.no_of_soils);
 
-    for (int index = 0; index < seeds->no_of_refs; index += 2) {
-      if (result >= seeds->list[index] &&
-          result <= seeds->list[index] + seeds->list[index + 1]) {
-        for (unsigned long seed_no = seeds->list[index];
-             seed_no < seeds->list[index] + seeds->list[index + 1]; seed_no++) {
-          if (result == seed_no) {
-            match = digit;
-            break;
-          }
-        }
+    for (int index = 0; index < seeds->count; index += 2) {
+      unsigned long seed_start = seeds->list[index];
+      unsigned long seed_end = seed_start + seeds->list[index + 1];
+
+      if (result >= seed_start && result <= seed_end) {
+        match = digit;
+        break;
       }
     }
   }
 
   return match;
-}
-
-void trim_seeds(unsigned long** seeds, const int no_of_seed_refs) {
-  for (int sei = 0; sei < no_of_seed_refs; sei += 2) {
-    for (int inner_i = sei + 2; inner_i < no_of_seed_refs; inner_i += 2) {
-      const unsigned long first = (*seeds)[sei];
-      const unsigned long first_range = (*seeds)[sei + 1];
-      const unsigned long second = (*seeds)[inner_i];
-      const unsigned long second_range = (*seeds)[inner_i + 1];
-
-      if (first > second && second + second_range > first) {
-        (*seeds)[inner_i + 1] = first - second;
-      } else if (second > first && first + first_range > second) {
-        (*seeds)[sei + 1] = second - first;
-      }
-    }
-  }
 }
 
 void free_targets(targets_t* targets) {

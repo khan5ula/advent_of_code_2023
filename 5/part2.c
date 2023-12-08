@@ -5,7 +5,7 @@
 #include <time.h>
 #include "seeds.h"
 
-#define INITIAL_SIZE 10
+#define INITIAL_SIZE 20
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
@@ -34,8 +34,13 @@ int main(int argc, char* argv[]) {
 
   fclose(file);
 
+  /**
+   * Going through the digits by reverse
+   * turned out to be approximately 98 % faster
+   */
+
   // lowest_location = go_through_from_seeds(&seeds, targets);
-  lowest_location = go_through_from_location(&seeds, targets);  // faster
+  lowest_location = go_through_from_location(&seeds, targets);
 
   clock_gettime(CLOCK_MONOTONIC, &ending_time);
 

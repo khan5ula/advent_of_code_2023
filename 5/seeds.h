@@ -5,7 +5,7 @@
 
 typedef struct seeds_t {
   unsigned long* list;
-  int no_of_refs;
+  int count;
 } seeds_t;
 
 typedef struct targets_t {
