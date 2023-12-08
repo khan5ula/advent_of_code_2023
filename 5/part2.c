@@ -8,18 +8,32 @@
 
 #define INITIAL_SIZE 10
 
-int collect_seeds(unsigned long** collection, int no_of_seed_refs, char* ch);
-int collect_types(unsigned long** collection,
-                  const int org_number,
-                  char* line_of_text,
-                  FILE* file);
-unsigned long go_through(const unsigned long source_no,
-                         const unsigned long* collection,
-                         const int count);
-void trim_seeds(unsigned long** seeds, const int no_of_seed_refs);
+typedef struct seeds_t {
+  unsigned long* list;
+  int no_of_refs;
+  unsigned long total_count;
+} seeds_t;
+
+typedef struct targets_t {
+  unsigned long* soils;
+  unsigned long* fertilizers;
+  unsigned long* water;
+  unsigned long* light;
+  unsigned long* temperature;
+  unsigned long* humidity;
+  unsigned long* location;
+
+  int no_of_soils;
+  int no_of_fertilizers;
+  int no_of_water;
+  int no_of_light;
+  int no_of_temp;
+  int no_of_humidity;
+  int no_of_location;
+} targets_t;
 
 int main(int argc, char* argv[]) {
-  if (argc < 1) {
+  if (argc < 2) {
     perror("expected source as launch parameter");
     return 1;
   }
@@ -36,24 +50,23 @@ int main(int argc, char* argv[]) {
 
   char line_of_text[1024] = {'\0'};
 
-  int no_of_seed_refs = 0;
-  int no_of_soils = 0;
-  int no_of_fertilizers = 0;
-  int no_of_water = 0;
-  int no_of_light = 0;
-  int no_of_temp = 0;
-  int no_of_humidity = 0;
-  int no_of_location = 0;
-  unsigned long total_count_of_seeds = 0;
+  struct seeds_t seeds = {malloc(INITIAL_SIZE * sizeof(unsigned long)), 0, 0};
 
-  unsigned long* seeds = malloc(INITIAL_SIZE * sizeof(unsigned long));
-  unsigned long* soils = malloc(INITIAL_SIZE * sizeof(unsigned long));
-  unsigned long* fertilizers = malloc(INITIAL_SIZE * sizeof(unsigned long));
-  unsigned long* water = malloc(INITIAL_SIZE * sizeof(unsigned long));
-  unsigned long* light = malloc(INITIAL_SIZE * sizeof(unsigned long));
-  unsigned long* temperature = malloc(INITIAL_SIZE * sizeof(unsigned long));
-  unsigned long* humidity = malloc(INITIAL_SIZE * sizeof(unsigned long));
-  unsigned long* location = malloc(INITIAL_SIZE * sizeof(unsigned long));
+  struct targets_t targets = {
+      .soils = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .fertilizers = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .water = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .light = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .temperature = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .humidity = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .location = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .no_of_soils = 0,
+      .no_of_fertilizers = 0,
+      .no_of_water = 0,
+      .no_of_light = 0,
+      .no_of_temp = 0,
+      .no_of_humidity = 0,
+      .no_of_location = 0};
 
   unsigned long lowest_location = -1;
 
@@ -61,52 +74,58 @@ int main(int argc, char* argv[]) {
     char* ch;
 
     if ((ch = strstr(line_of_text, "seeds:")))
-      no_of_seed_refs = collect_seeds(&seeds, no_of_seed_refs, ch);
+      seeds.no_of_refs = collect_seeds(&seeds.list, seeds.no_of_refs, ch);
 
     if ((ch = strstr(line_of_text, "seed-to-soil map:")))
-      no_of_soils = collect_types(&soils, no_of_soils, line_of_text, file);
+      targets.no_of_soils = collect_types(&targets.soils, targets.no_of_soils,
+                                          line_of_text, file);
 
     if ((ch = strstr(line_of_text, "soil-to-fertilizer map:")))
-      no_of_fertilizers =
-          collect_types(&fertilizers, no_of_fertilizers, line_of_text, file);
+      targets.no_of_fertilizers = collect_types(
+          &targets.fertilizers, targets.no_of_fertilizers, line_of_text, file);
 
     if ((ch = strstr(line_of_text, "fertilizer-to-water map:")))
-      no_of_water = collect_types(&water, no_of_water, line_of_text, file);
+      targets.no_of_water = collect_types(&targets.water, targets.no_of_water,
+                                          line_of_text, file);
 
     if ((ch = strstr(line_of_text, "water-to-light map:")))
-      no_of_light = collect_types(&light, no_of_light, line_of_text, file);
+      targets.no_of_light = collect_types(&targets.light, targets.no_of_light,
+                                          line_of_text, file);
 
     if ((ch = strstr(line_of_text, "light-to-temperature map:")))
-      no_of_temp = collect_types(&temperature, no_of_temp, line_of_text, file);
+      targets.no_of_temp = collect_types(
+          &targets.temperature, targets.no_of_temp, line_of_text, file);
 
     if ((ch = strstr(line_of_text, "temperature-to-humidity map:")))
-      no_of_humidity =
-          collect_types(&humidity, no_of_humidity, line_of_text, file);
+      targets.no_of_humidity = collect_types(
+          &targets.humidity, targets.no_of_humidity, line_of_text, file);
 
     if ((ch = strstr(line_of_text, "humidity-to-location map:")))
-      no_of_location =
-          collect_types(&location, no_of_location, line_of_text, file);
+      targets.no_of_location = collect_types(
+          &targets.location, targets.no_of_location, line_of_text, file);
   }
 
   fclose(file);
 
-  for (int i = 0; i < no_of_seed_refs; i++) {
-    printf("seed ref: %ld\n", seeds[i]);
+  for (int i = 0; i < seeds.no_of_refs; i++) {
+    printf("seed ref: %ld\n", seeds.list[i]);
   }
 
-  for (int sei = 0; sei < no_of_seed_refs; sei += 2) {
-    for (unsigned long true_seed_no = seeds[sei];
-         true_seed_no < (seeds[sei] + seeds[sei + 1]); true_seed_no++) {
+  for (int sei = 0; sei < seeds.no_of_refs; sei += 2) {
+    for (unsigned long true_seed_no = seeds.list[sei];
+         true_seed_no < (seeds.list[sei] + seeds.list[sei + 1]);
+         true_seed_no++) {
       unsigned long result = true_seed_no;
-      total_count_of_seeds++;
+      seeds.total_count++;
 
-      result = go_through(result, soils, no_of_soils);
-      result = go_through(result, fertilizers, no_of_fertilizers);
-      result = go_through(result, water, no_of_water);
-      result = go_through(result, light, no_of_light);
-      result = go_through(result, temperature, no_of_temp);
-      result = go_through(result, humidity, no_of_humidity);
-      result = go_through(result, location, no_of_location);
+      result = go_through(result, targets.soils, targets.no_of_soils);
+      result =
+          go_through(result, targets.fertilizers, targets.no_of_fertilizers);
+      result = go_through(result, targets.water, targets.no_of_water);
+      result = go_through(result, targets.light, targets.no_of_light);
+      result = go_through(result, targets.temperature, targets.no_of_temp);
+      result = go_through(result, targets.humidity, targets.no_of_humidity);
+      result = go_through(result, targets.location, targets.no_of_location);
 
       if (lowest_location == -1 || result < lowest_location)
         lowest_location = result;
@@ -121,19 +140,19 @@ int main(int argc, char* argv[]) {
 
   printf("\nThe lowest location found was: %ld\n", lowest_location);
   printf("The target location is below 24261546\n");
-  printf("Total count of seeds was: %ld\n", total_count_of_seeds);
+  printf("Total count of seeds was: %ld\n", seeds.total_count);
   printf("Running time: %.3lf ms, %.2lf seconds\n",
          (double)elapsed_time_ns / 1000000,
          (double)elapsed_time_ns / 1000000000);
 
-  free(seeds);
-  free(soils);
-  free(fertilizers);
-  free(water);
-  free(light);
-  free(temperature);
-  free(humidity);
-  free(location);
+  free(seeds.list);
+  free(targets.soils);
+  free(targets.fertilizers);
+  free(targets.water);
+  free(targets.light);
+  free(targets.temperature);
+  free(targets.humidity);
+  free(targets.location);
 
   return 0;
 }
