@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall
-SRC = part2.c
+SRC = part2.c seeds.c
 TARGET = part2
 
 $(TARGET): $(SRC)
