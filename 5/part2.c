@@ -22,8 +22,8 @@ int main(int argc, char* argv[]) {
   struct timespec starting_time, ending_time;
   clock_gettime(CLOCK_MONOTONIC, &starting_time);
 
-  unsigned long lowest_location = -1;
-  struct seeds_t seeds = {malloc(INITIAL_SIZE * sizeof(unsigned long)), 0};
+  long lowest_location = -1;
+  struct seeds_t seeds = {malloc(INITIAL_SIZE * sizeof(long)), 0};
   struct targets_t targets = init_targets();
   char line_of_text[1024] = {'\0'};
 
