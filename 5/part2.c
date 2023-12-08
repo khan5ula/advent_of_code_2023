@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
    * turned out to be approximately 98 % faster
    */
 
-  // lowest_location = get_result_from_seed_to_location(&seeds, targets);
+  // long lowest_location = get_result_from_seed_to_location(&seeds, targets);
   long lowest_location = get_result_from_location_to_seed(&seeds, targets);
 
   clock_gettime(CLOCK_MONOTONIC, &ending_time);
