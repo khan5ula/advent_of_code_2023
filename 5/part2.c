@@ -1,10 +1,9 @@
-#include "seeds.h"
+#define _POSIX_C_SOURCE 199309L  // https://stackoverflow.com/a/8881675/21125767
 
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <time.h>
+#include "seeds.h"
 
 #define INITIAL_SIZE 10
 
@@ -15,79 +14,28 @@ int main(int argc, char* argv[]) {
   }
 
   FILE* file;
-
-  struct timespec starting_time, ending_time;
-  clock_gettime(CLOCK_MONOTONIC, &starting_time);
-
   if ((file = fopen(argv[1], "r")) == NULL) {
     perror("couldn't open the file");
     return 1;
   }
 
-  char line_of_text[1024] = {'\0'};
-
-  struct seeds_t seeds = {malloc(INITIAL_SIZE * sizeof(unsigned long)), 0, 0};
-
-  struct targets_t targets = {
-      .soils = malloc(INITIAL_SIZE * sizeof(unsigned long)),
-      .fertilizers = malloc(INITIAL_SIZE * sizeof(unsigned long)),
-      .water = malloc(INITIAL_SIZE * sizeof(unsigned long)),
-      .light = malloc(INITIAL_SIZE * sizeof(unsigned long)),
-      .temperature = malloc(INITIAL_SIZE * sizeof(unsigned long)),
-      .humidity = malloc(INITIAL_SIZE * sizeof(unsigned long)),
-      .location = malloc(INITIAL_SIZE * sizeof(unsigned long)),
-      .no_of_soils = 0,
-      .no_of_fertilizers = 0,
-      .no_of_water = 0,
-      .no_of_light = 0,
-      .no_of_temp = 0,
-      .no_of_humidity = 0,
-      .no_of_location = 0};
+  struct timespec starting_time, ending_time;
+  clock_gettime(CLOCK_MONOTONIC, &starting_time);
 
   unsigned long lowest_location = -1;
+  struct seeds_t seeds = {malloc(INITIAL_SIZE * sizeof(unsigned long)), 0};
+  struct targets_t targets = init_targets();
+  char line_of_text[1024] = {'\0'};
 
   while (fgets(line_of_text, 1024, file)) {
-    char* ch;
-
-    if ((ch = strstr(line_of_text, "seeds:")))
-      seeds.no_of_refs = collect_seeds(&seeds.list, seeds.no_of_refs, ch);
-
-    if ((ch = strstr(line_of_text, "seed-to-soil map:")))
-      targets.no_of_soils = collect_types(&targets.soils, targets.no_of_soils,
-                                          line_of_text, file);
-
-    if ((ch = strstr(line_of_text, "soil-to-fertilizer map:")))
-      targets.no_of_fertilizers = collect_types(
-          &targets.fertilizers, targets.no_of_fertilizers, line_of_text, file);
-
-    if ((ch = strstr(line_of_text, "fertilizer-to-water map:")))
-      targets.no_of_water = collect_types(&targets.water, targets.no_of_water,
-                                          line_of_text, file);
-
-    if ((ch = strstr(line_of_text, "water-to-light map:")))
-      targets.no_of_light = collect_types(&targets.light, targets.no_of_light,
-                                          line_of_text, file);
-
-    if ((ch = strstr(line_of_text, "light-to-temperature map:")))
-      targets.no_of_temp = collect_types(
-          &targets.temperature, targets.no_of_temp, line_of_text, file);
-
-    if ((ch = strstr(line_of_text, "temperature-to-humidity map:")))
-      targets.no_of_humidity = collect_types(
-          &targets.humidity, targets.no_of_humidity, line_of_text, file);
-
-    if ((ch = strstr(line_of_text, "humidity-to-location map:")))
-      targets.no_of_location = collect_types(
-          &targets.location, targets.no_of_location, line_of_text, file);
+    collect_seeds(&seeds, file, line_of_text);
+    collect_targets(&targets, file, line_of_text);
   }
 
   fclose(file);
 
-  for (int i = 0; i < seeds.no_of_refs; i++) {
-    printf("seed ref: %ld\n", seeds.list[i]);
-  }
-
-  lowest_location = go_through_from_seeds(&seeds, targets);
+  // lowest_location = go_through_from_seeds(&seeds, targets);
+  lowest_location = go_through_from_location(&seeds, targets);  // faster
 
   clock_gettime(CLOCK_MONOTONIC, &ending_time);
 
@@ -95,13 +43,7 @@ int main(int argc, char* argv[]) {
       (ending_time.tv_sec - starting_time.tv_sec) * 1000000000 +
       (ending_time.tv_nsec - starting_time.tv_nsec);
 
-  printf("\nThe lowest location found was: %ld\n", lowest_location);
-  printf("The target location is below 24261546\n");
-  printf("Total count of seeds was: %ld\n", seeds.total_count);
-  printf("Running time: %.3lf ms, %.2lf seconds\n",
-         (double)elapsed_time_ns / 1000000,
-         (double)elapsed_time_ns / 1000000000);
-
+  print_results(lowest_location, seeds, elapsed_time_ns);
   free(seeds.list);
   free_targets(&targets);
 

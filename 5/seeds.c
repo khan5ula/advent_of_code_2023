@@ -7,7 +7,33 @@
 
 #define INITIAL_SIZE 10
 
-int collect_seeds(unsigned long** seeds, int no_of_seed_refs, char* ch) {
+targets_t init_targets() {
+  targets_t targets = {
+      .soils = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .fertilizers = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .water = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .light = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .temperature = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .humidity = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .location = malloc(INITIAL_SIZE * sizeof(unsigned long)),
+      .no_of_soils = 0,
+      .no_of_fertilizers = 0,
+      .no_of_water = 0,
+      .no_of_light = 0,
+      .no_of_temp = 0,
+      .no_of_humidity = 0,
+      .no_of_location = 0};
+
+  return targets;
+}
+
+void collect_seeds(seeds_t* seeds, FILE* file, char* line_of_text) {
+  char* ch;
+  if ((ch = strstr(line_of_text, "seeds:")))
+    seeds->no_of_refs = seed_refs(&seeds->list, seeds->no_of_refs, ch);
+}
+
+int seed_refs(unsigned long** seeds, int no_of_seed_refs, char* ch) {
   int count = no_of_seed_refs;
   ch = strtok(ch, " ");
 
@@ -24,10 +50,42 @@ int collect_seeds(unsigned long** seeds, int no_of_seed_refs, char* ch) {
   return count;
 }
 
-int collect_types(unsigned long** collection,
-                  const int org_number,
-                  char* line_of_text,
-                  FILE* file) {
+void collect_targets(targets_t* targets, FILE* file, char* line_of_text) {
+  char* ch;
+
+  if ((ch = strstr(line_of_text, "seed-to-soil map:")))
+    targets->no_of_soils = collect_target(&targets->soils, targets->no_of_soils,
+                                          line_of_text, file);
+
+  if ((ch = strstr(line_of_text, "soil-to-fertilizer map:")))
+    targets->no_of_fertilizers = collect_target(
+        &targets->fertilizers, targets->no_of_fertilizers, line_of_text, file);
+
+  if ((ch = strstr(line_of_text, "fertilizer-to-water map:")))
+    targets->no_of_water = collect_target(&targets->water, targets->no_of_water,
+                                          line_of_text, file);
+
+  if ((ch = strstr(line_of_text, "water-to-light map:")))
+    targets->no_of_light = collect_target(&targets->light, targets->no_of_light,
+                                          line_of_text, file);
+
+  if ((ch = strstr(line_of_text, "light-to-temperature map:")))
+    targets->no_of_temp = collect_target(
+        &targets->temperature, targets->no_of_temp, line_of_text, file);
+
+  if ((ch = strstr(line_of_text, "temperature-to-humidity map:")))
+    targets->no_of_humidity = collect_target(
+        &targets->humidity, targets->no_of_humidity, line_of_text, file);
+
+  if ((ch = strstr(line_of_text, "humidity-to-location map:")))
+    targets->no_of_location = collect_target(
+        &targets->location, targets->no_of_location, line_of_text, file);
+}
+
+int collect_target(unsigned long** collection,
+                   const int org_number,
+                   char* line_of_text,
+                   FILE* file) {
   int count = org_number;
 
   while (fgets(line_of_text, 1024, file) && !feof(file)) {
@@ -56,7 +114,7 @@ unsigned long go_through(const unsigned long source_no,
                          const int count) {
   unsigned long result = source_no;
 
-  for (int index = 0; (index + 2) < count; index += 3) {
+  for (int index = 0; index < count; index += 3) {
     const unsigned long dest = collection[index];
     const unsigned long src = collection[index + 1];
     const unsigned long range = collection[index + 2];
@@ -69,6 +127,99 @@ unsigned long go_through(const unsigned long source_no,
   }
 
   return result;
+}
+
+unsigned long inverse_go_through(const unsigned long digit,
+                                 const unsigned long* collection,
+                                 const int count) {
+  unsigned long result = digit;
+
+  for (int index = 0; index < count; index += 3) {
+    const unsigned long dest = collection[index];
+    const unsigned long src = collection[index + 1];
+    const unsigned long range = collection[index + 2];
+
+    if (result >= dest && result <= dest + range) {
+      result =
+          (dest > src) ? result - abs(dest - src) : result + abs(dest - src);
+      break;
+    }
+  }
+
+  return result;
+}
+
+unsigned long go_through_from_seeds(seeds_t* seeds, targets_t targets) {
+  long lowest = -1;
+
+  for (int sei = 0; sei < seeds->no_of_refs / 2; sei += 2) {
+    for (unsigned long true_seed_no = seeds->list[sei];
+         true_seed_no < (seeds->list[sei] + seeds->list[sei + 1]);
+         true_seed_no++) {
+      unsigned long result = true_seed_no;
+
+      result = go_through(result, targets.soils, targets.no_of_soils);
+      result =
+          go_through(result, targets.fertilizers, targets.no_of_fertilizers);
+      result = go_through(result, targets.water, targets.no_of_water);
+      result = go_through(result, targets.light, targets.no_of_light);
+      result = go_through(result, targets.temperature, targets.no_of_temp);
+      result = go_through(result, targets.humidity, targets.no_of_humidity);
+      result = go_through(result, targets.location, targets.no_of_location);
+
+      if (lowest == -1 || result < lowest)
+        lowest = result;
+    }
+  }
+
+  return lowest;
+}
+
+unsigned long find_max_value(seeds_t seeds) {
+  unsigned long max = 0;
+
+  for (int index = 0; index < seeds.no_of_refs; index += 2) {
+    if (seeds.list[index] + seeds.list[index + 1] > max)
+      max = seeds.list[index] + seeds.list[index + 1];
+  }
+
+  return max;
+}
+
+unsigned long go_through_from_location(seeds_t* seeds, targets_t targets) {
+  long match = -1;
+  unsigned long max_value = find_max_value(*seeds);
+
+  for (int digit = 0; digit < max_value && match < 0; digit++) {
+    unsigned long result = digit;
+
+    result =
+        inverse_go_through(result, targets.location, targets.no_of_location);
+    result =
+        inverse_go_through(result, targets.humidity, targets.no_of_humidity);
+    result =
+        inverse_go_through(result, targets.temperature, targets.no_of_temp);
+    result = inverse_go_through(result, targets.light, targets.no_of_light);
+    result = inverse_go_through(result, targets.water, targets.no_of_water);
+    result = inverse_go_through(result, targets.fertilizers,
+                                targets.no_of_fertilizers);
+    result = inverse_go_through(result, targets.soils, targets.no_of_soils);
+
+    for (int index = 0; index < seeds->no_of_refs; index += 2) {
+      if (result >= seeds->list[index] &&
+          result <= seeds->list[index] + seeds->list[index + 1]) {
+        for (unsigned long seed_no = seeds->list[index];
+             seed_no < seeds->list[index] + seeds->list[index + 1]; seed_no++) {
+          if (result == seed_no) {
+            match = digit;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return match;
 }
 
 void trim_seeds(unsigned long** seeds, const int no_of_seed_refs) {
@@ -98,31 +249,9 @@ void free_targets(targets_t* targets) {
   free(targets->location);
 }
 
-unsigned long go_through_from_seeds(seeds_t* seeds, targets_t targets) {
-  unsigned long lowest_location = -1;
-
-  for (int sei = 0; sei < seeds->no_of_refs; sei += 2) {
-    for (unsigned long true_seed_no = seeds->list[sei];
-         true_seed_no < (seeds->list[sei] + seeds->list[sei + 1]);
-         true_seed_no++) {
-      unsigned long result = true_seed_no;
-      seeds->total_count++;
-
-      result = go_through(result, targets.soils, targets.no_of_soils);
-      result =
-          go_through(result, targets.fertilizers, targets.no_of_fertilizers);
-      result = go_through(result, targets.water, targets.no_of_water);
-      result = go_through(result, targets.light, targets.no_of_light);
-      result = go_through(result, targets.temperature, targets.no_of_temp);
-      result = go_through(result, targets.humidity, targets.no_of_humidity);
-      result = go_through(result, targets.location, targets.no_of_location);
-
-      if (lowest_location == -1 || result < lowest_location)
-        lowest_location = result;
-    }
-  }
-
-  return lowest_location;
+void print_results(unsigned long lowest_location, seeds_t seeds, long time) {
+  printf("\nThe lowest location found was: %ld\n", lowest_location);
+  printf("The target location is below 24261546\n");
+  printf("Running time: %.3lf ms, %.2lf seconds\n", (double)time / 1000000,
+         (double)time / 1000000000);
 }
-
-// unsigned long go_through_from_location() {}
