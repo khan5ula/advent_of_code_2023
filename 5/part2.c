@@ -8,30 +8,6 @@
 
 #define INITIAL_SIZE 10
 
-typedef struct seeds_t {
-  unsigned long* list;
-  int no_of_refs;
-  unsigned long total_count;
-} seeds_t;
-
-typedef struct targets_t {
-  unsigned long* soils;
-  unsigned long* fertilizers;
-  unsigned long* water;
-  unsigned long* light;
-  unsigned long* temperature;
-  unsigned long* humidity;
-  unsigned long* location;
-
-  int no_of_soils;
-  int no_of_fertilizers;
-  int no_of_water;
-  int no_of_light;
-  int no_of_temp;
-  int no_of_humidity;
-  int no_of_location;
-} targets_t;
-
 int main(int argc, char* argv[]) {
   if (argc < 2) {
     perror("expected source as launch parameter");
@@ -111,26 +87,7 @@ int main(int argc, char* argv[]) {
     printf("seed ref: %ld\n", seeds.list[i]);
   }
 
-  for (int sei = 0; sei < seeds.no_of_refs; sei += 2) {
-    for (unsigned long true_seed_no = seeds.list[sei];
-         true_seed_no < (seeds.list[sei] + seeds.list[sei + 1]);
-         true_seed_no++) {
-      unsigned long result = true_seed_no;
-      seeds.total_count++;
-
-      result = go_through(result, targets.soils, targets.no_of_soils);
-      result =
-          go_through(result, targets.fertilizers, targets.no_of_fertilizers);
-      result = go_through(result, targets.water, targets.no_of_water);
-      result = go_through(result, targets.light, targets.no_of_light);
-      result = go_through(result, targets.temperature, targets.no_of_temp);
-      result = go_through(result, targets.humidity, targets.no_of_humidity);
-      result = go_through(result, targets.location, targets.no_of_location);
-
-      if (lowest_location == -1 || result < lowest_location)
-        lowest_location = result;
-    }
-  }
+  lowest_location = go_through_from_seeds(&seeds, targets);
 
   clock_gettime(CLOCK_MONOTONIC, &ending_time);
 
@@ -146,13 +103,7 @@ int main(int argc, char* argv[]) {
          (double)elapsed_time_ns / 1000000000);
 
   free(seeds.list);
-  free(targets.soils);
-  free(targets.fertilizers);
-  free(targets.water);
-  free(targets.light);
-  free(targets.temperature);
-  free(targets.humidity);
-  free(targets.location);
+  free_targets(&targets);
 
   return 0;
 }

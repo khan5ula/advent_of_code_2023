@@ -87,3 +87,42 @@ void trim_seeds(unsigned long** seeds, const int no_of_seed_refs) {
     }
   }
 }
+
+void free_targets(targets_t* targets) {
+  free(targets->soils);
+  free(targets->fertilizers);
+  free(targets->water);
+  free(targets->light);
+  free(targets->temperature);
+  free(targets->humidity);
+  free(targets->location);
+}
+
+unsigned long go_through_from_seeds(seeds_t* seeds, targets_t targets) {
+  unsigned long lowest_location = -1;
+
+  for (int sei = 0; sei < seeds->no_of_refs; sei += 2) {
+    for (unsigned long true_seed_no = seeds->list[sei];
+         true_seed_no < (seeds->list[sei] + seeds->list[sei + 1]);
+         true_seed_no++) {
+      unsigned long result = true_seed_no;
+      seeds->total_count++;
+
+      result = go_through(result, targets.soils, targets.no_of_soils);
+      result =
+          go_through(result, targets.fertilizers, targets.no_of_fertilizers);
+      result = go_through(result, targets.water, targets.no_of_water);
+      result = go_through(result, targets.light, targets.no_of_light);
+      result = go_through(result, targets.temperature, targets.no_of_temp);
+      result = go_through(result, targets.humidity, targets.no_of_humidity);
+      result = go_through(result, targets.location, targets.no_of_location);
+
+      if (lowest_location == -1 || result < lowest_location)
+        lowest_location = result;
+    }
+  }
+
+  return lowest_location;
+}
+
+// unsigned long go_through_from_location() {}
