@@ -28,20 +28,21 @@ typedef struct targets_t {
 
 targets_t init_targets();
 void collect_seeds(seeds_t* seeds, FILE* file, char* line_of_text);
-int seed_refs(long** seeds, int no_of_seed_refs, char* ch);
+int get_seed_refs(long** seeds, int no_of_seed_refs, char* ch);
 void collect_targets(targets_t* targets, FILE* file, char* line_of_text);
 int collect_target(long** collection,
                    const int org_number,
                    char* line_of_text,
                    FILE* file);
-long go_through(const long source_no, const long* collection, const int count);
-long inverse_go_through(const long digit,
-                        const long* collection,
-                        const int count);
-long go_through_from_seeds(seeds_t* seeds, targets_t targets);
+long map_through_targets_in_order(const long source_no,
+                                  const long* collection,
+                                  const int count);
+long map_through_targets_in_reverse(const long digit,
+                                    const long* collection,
+                                    const int count);
+long get_result_from_seed_to_location(seeds_t* seeds, targets_t targets);
+long get_result_from_location_to_seed(seeds_t* seeds, targets_t targets);
 long find_max_value(seeds_t seeds);
-long go_through_from_location(seeds_t* seeds, targets_t targets);
-void trim_seeds(long** seeds, const int no_of_seed_refs);
 void free_targets(targets_t* targets);
 void print_results(long lowest_location, seeds_t seeds, long time);
 

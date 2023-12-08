@@ -30,10 +30,10 @@ targets_t init_targets() {
 void collect_seeds(seeds_t* seeds, FILE* file, char* line_of_text) {
   char* ch;
   if ((ch = strstr(line_of_text, "seeds:")))
-    seeds->count = seed_refs(&seeds->list, seeds->count, ch);
+    seeds->count = get_seed_refs(&seeds->list, seeds->count, ch);
 }
 
-int seed_refs(long** seeds, int no_of_seed_refs, char* ch) {
+int get_seed_refs(long** seeds, int no_of_seed_refs, char* ch) {
   int count = no_of_seed_refs;
   ch = strtok(ch, " ");
   char* end;
@@ -110,7 +110,9 @@ int collect_target(long** targets,
   return count;
 }
 
-long go_through(const long source_no, const long* collection, const int count) {
+long map_through_targets_in_order(const long source_no,
+                                  const long* collection,
+                                  const int count) {
   long result = source_no;
 
   for (int index = 0; index < count; index += 3) {
@@ -128,9 +130,10 @@ long go_through(const long source_no, const long* collection, const int count) {
   return result;
 }
 
-long inverse_go_through(const long digit,
-                        const long* collection,
-                        const int count) {
+/* Preferred method */
+long map_through_targets_in_reverse(const long digit,
+                                    const long* collection,
+                                    const int count) {
   long result = digit;
 
   for (int index = 0; index < count; index += 3) {
@@ -148,7 +151,7 @@ long inverse_go_through(const long digit,
   return result;
 }
 
-long go_through_from_seeds(seeds_t* seeds, targets_t targets) {
+long get_result_from_seed_to_location(seeds_t* seeds, targets_t targets) {
   long lowest = -1;
 
   for (int sei = 0; sei < seeds->count / 2; sei += 2) {
@@ -157,14 +160,20 @@ long go_through_from_seeds(seeds_t* seeds, targets_t targets) {
          true_seed_no++) {
       long result = true_seed_no;
 
-      result = go_through(result, targets.soils, targets.no_of_soils);
-      result =
-          go_through(result, targets.fertilizers, targets.no_of_fertilizers);
-      result = go_through(result, targets.water, targets.no_of_water);
-      result = go_through(result, targets.light, targets.no_of_light);
-      result = go_through(result, targets.temperature, targets.no_of_temp);
-      result = go_through(result, targets.humidity, targets.no_of_humidity);
-      result = go_through(result, targets.location, targets.no_of_location);
+      result = map_through_targets_in_order(result, targets.soils,
+                                            targets.no_of_soils);
+      result = map_through_targets_in_order(result, targets.fertilizers,
+                                            targets.no_of_fertilizers);
+      result = map_through_targets_in_order(result, targets.water,
+                                            targets.no_of_water);
+      result = map_through_targets_in_order(result, targets.light,
+                                            targets.no_of_light);
+      result = map_through_targets_in_order(result, targets.temperature,
+                                            targets.no_of_temp);
+      result = map_through_targets_in_order(result, targets.humidity,
+                                            targets.no_of_humidity);
+      result = map_through_targets_in_order(result, targets.location,
+                                            targets.no_of_location);
 
       if (result < lowest || lowest < 0)
         lowest = result;
@@ -174,34 +183,27 @@ long go_through_from_seeds(seeds_t* seeds, targets_t targets) {
   return lowest;
 }
 
-long find_max_value(seeds_t seeds) {
-  long max = 0;
-
-  for (int index = 0; index < seeds.count; index += 2) {
-    if (seeds.list[index] + seeds.list[index + 1] > max)
-      max = seeds.list[index] + seeds.list[index + 1];
-  }
-
-  return max;
-}
-
-long go_through_from_location(seeds_t* seeds, targets_t targets) {
+/* Much more time efficient compared to the version above */
+long get_result_from_location_to_seed(seeds_t* seeds, targets_t targets) {
   long max_value = find_max_value(*seeds);
 
   for (int digit = 0; digit <= max_value; digit++) {
     long result = digit;
 
-    result =
-        inverse_go_through(result, targets.location, targets.no_of_location);
-    result =
-        inverse_go_through(result, targets.humidity, targets.no_of_humidity);
-    result =
-        inverse_go_through(result, targets.temperature, targets.no_of_temp);
-    result = inverse_go_through(result, targets.light, targets.no_of_light);
-    result = inverse_go_through(result, targets.water, targets.no_of_water);
-    result = inverse_go_through(result, targets.fertilizers,
-                                targets.no_of_fertilizers);
-    result = inverse_go_through(result, targets.soils, targets.no_of_soils);
+    result = map_through_targets_in_reverse(result, targets.location,
+                                            targets.no_of_location);
+    result = map_through_targets_in_reverse(result, targets.humidity,
+                                            targets.no_of_humidity);
+    result = map_through_targets_in_reverse(result, targets.temperature,
+                                            targets.no_of_temp);
+    result = map_through_targets_in_reverse(result, targets.light,
+                                            targets.no_of_light);
+    result = map_through_targets_in_reverse(result, targets.water,
+                                            targets.no_of_water);
+    result = map_through_targets_in_reverse(result, targets.fertilizers,
+                                            targets.no_of_fertilizers);
+    result = map_through_targets_in_reverse(result, targets.soils,
+                                            targets.no_of_soils);
 
     for (int index = 0; index < seeds->count; index += 2) {
       long seed_start = seeds->list[index];
@@ -214,6 +216,17 @@ long go_through_from_location(seeds_t* seeds, targets_t targets) {
   }
 
   return -1;
+}
+
+long find_max_value(seeds_t seeds) {
+  long max = 0;
+
+  for (int index = 0; index < seeds.count; index += 2) {
+    if (seeds.list[index] + seeds.list[index + 1] > max)
+      max = seeds.list[index] + seeds.list[index + 1];
+  }
+
+  return max;
 }
 
 void free_targets(targets_t* targets) {
