@@ -141,7 +141,7 @@ long map_through_targets_in_reverse(const long digit,
     const long src = collection[index + 1];
     const long range = collection[index + 2];
 
-    if (result >= dest && result <= dest + range) {
+    if (result >= dest && result < dest + range) {
       result =
           (dest > src) ? result - abs(dest - src) : result + abs(dest - src);
       break;
