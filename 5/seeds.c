@@ -120,7 +120,7 @@ long map_through_targets_in_order(const long source_no,
     const long src = collection[index + 1];
     const long range = collection[index + 2];
 
-    if (result >= src && result <= src + range) {
+    if (result >= src && result < src + range) {
       result =
           (dest > src) ? result + abs(dest - src) : result - abs(dest - src);
       break;
@@ -241,7 +241,6 @@ void free_targets(targets_t* targets) {
 
 void print_results(long lowest_location, seeds_t seeds, long time) {
   printf("\nThe lowest location found was: %ld\n", lowest_location);
-  printf("The target location is below 24261546\n");
   printf("Running time: %.3lf ms, %.2lf seconds\n", (double)time / 1000000,
          (double)time / 1000000000);
 }
